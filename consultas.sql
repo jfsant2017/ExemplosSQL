@@ -128,3 +128,32 @@ WHILE @position <= DATALENGTH(@string)
    END;
 GO
 
+--------------------------
+
+       if (OBJECT_ID('tempdb..#filtro') IS NOT NULL)
+              DROP TABLE #filtro
+
+       create table #filtro(texto varchar(100))
+
+    insert into #filtro values ('PROD01')
+    insert into #filtro values ('PROD02')
+    insert into #filtro values ('PROD03')
+    insert into #filtro values ('PROD01/PROD02/PROD04')
+
+    insert into #filtro
+    select value from string_split((select texto from #filtro where charindex('/', texto) > 0), '/')
+
+
+    select 'Antes', * from #filtro
+
+    delete from #filtro
+     where charindex('/', texto) > 0;
+
+    with duplicados as(
+        select fil.texto, row_number() over(partition by fil.texto order by fil.texto) as id
+          from #filtro fil
+    )
+    delete from duplicados where id > 1;
+
+
+    select 'Depois', * from #filtro
